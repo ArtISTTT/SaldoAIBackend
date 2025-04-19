@@ -3,6 +3,26 @@ import { TransactionModel } from '@/models/transaction/transaction.model';
 import { groupBy, standardDeviation } from './utils';
 
 export const statsResolvers = {
+  categoriesStats: async (_: any, { type }: { type: string }, context: any) => {
+    if (!context.user) throw new Error('Unauthorized');
+    if (!type) throw new Error('Type is required');
+
+    const transactions = await TransactionModel.find({
+      userId: context.user.id,
+      type,
+    });
+
+    if (!transactions.length) {
+      return [];
+    }
+
+    const groups = groupBy(transactions, (tx: any) => tx.category);
+    return Array.from(groups.entries()).map(([category, txs]) => ({
+      category,
+      total: txs.reduce((sum: number, tx: any) => sum + Number(tx.amount), 0),
+      count: txs.length,
+    }));
+  },
   statsSummary: async (_: any, __: any, context: any) => {
     if (!context.user) throw new Error('Unauthorized');
     const transactions = await TransactionModel.find({ userId: context.user.id });
