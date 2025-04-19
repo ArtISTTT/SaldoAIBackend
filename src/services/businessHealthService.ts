@@ -146,8 +146,18 @@ export class BusinessHealthService {
     // Add tax alerts
     if (new Date(data.taxes.nextPaymentDate).getTime() - Date.now() < 15 * 24 * 60 * 60 * 1000) {
       alerts.push({
-        type: 'warning',
-        message: `⚠️ Скоро срок уплаты налога — ${data.taxes.taxAmount.toFixed(2)}`
+        severity: 'warning',
+        message: `⚠️ Скоро срок уплаты налога — ${data.taxes.taxAmount.toFixed(2)} руб.`
+      });
+    }
+
+    // Add tax system specific alerts
+    if (data.taxes.recommendations) {
+      data.taxes.recommendations.forEach(rec => {
+        alerts.push({
+          severity: rec.includes('🚨') ? 'critical' : 'warning',
+          message: rec
+        });
       });
     }
 

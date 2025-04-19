@@ -1,14 +1,54 @@
 
 import { TransactionModel } from '@/models/transaction/transaction.model';
+import { BusinessProfileModel, BusinessType, TaxSystem } from '@/models/businessProfile/businessProfile.model';
 import { Types } from 'mongoose';
 
-export enum TaxationType {
-  SELF_EMPLOYED = 'self_employed',
-  SOLE_PROPRIETOR = 'sole_proprietor'
+interface TaxConfig {
+  rate: number;
+  limits: {
+    yearly: number;
+    monthly: number;
+  };
 }
 
+const DEFAULT_TAX_CONFIGS: Record<TaxSystem, TaxConfig> = {
+  [TaxSystem.NPD]: {
+    rate: 0.04, // 4% для физлиц
+    limits: {
+      yearly: 2400000, // 2.4M руб
+      monthly: 200000 // 200K руб
+    }
+  },
+  [TaxSystem.USN_INCOME]: {
+    rate: 0.06, // 6%
+    limits: {
+      yearly: 60000000, // 60M руб
+      monthly: 5000000 // ~5M руб
+    }
+  },
+  [TaxSystem.USN_INCOME_EXPENSE]: {
+    rate: 0.15, // 15%
+    limits: {
+      yearly: 60000000,
+      monthly: 5000000
+    }
+  },
+  [TaxSystem.OSN]: {
+    rate: 0.20, // 20%
+    limits: {
+      yearly: Infinity,
+      monthly: Infinity
+    }
+  }
+};
+
 export class TaxService {
-  static async calculateTaxes(userId: Types.ObjectId, taxationType: TaxationType) {
+  static async calculateTaxes(userId: Types.ObjectId) {
+    const profile = await BusinessProfileModel.findOne({ userId });
+    if (!profile) {
+      throw new Error('Business profile not found');
+    }
+
     const currentYear = new Date().getFullYear();
     const transactions = await TransactionModel.find({
       userId,
@@ -22,26 +62,20 @@ export class TaxService {
       .filter(t => t.type === 'income')
       .reduce((sum, t) => sum + t.amount, 0);
 
-    if (taxationType === TaxationType.SELF_EMPLOYED) {
-      return {
-        taxAmount: income * 0.06, // 6% for B2B
-        nextPaymentDate: this.getNextQuarterEnd(),
-        type: 'self_employed',
-        recommendation: this.getTaxRecommendation()
-      };
-    }
+    const config = profile.customTaxRate ? {
+      rate: profile.customTaxRate,
+      limits: profile.customTaxLimits || DEFAULT_TAX_CONFIGS[profile.taxSystem].limits
+    } : DEFAULT_TAX_CONFIGS[profile.taxSystem];
 
-    // Sole Proprietor (УСН)
-    const insurancePayment = 45842; // Fixed for 2024
-    const taxRate = 0.06; // 6% revenue
+    const taxAmount = income * config.rate;
     
     return {
-      taxAmount: income * taxRate,
-      insurancePayment,
-      totalDue: income * taxRate + insurancePayment,
+      taxAmount,
       nextPaymentDate: this.getNextQuarterEnd(),
-      type: 'sole_proprietor',
-      recommendation: this.getTaxRecommendation()
+      type: profile.businessType,
+      taxSystem: profile.taxSystem,
+      limits: config.limits,
+      recommendations: this.getTaxRecommendations(income, config, profile)
     };
   }
 
@@ -51,13 +85,21 @@ export class TaxService {
     return new Date(now.getFullYear(), (quarter + 1) * 3, 0);
   }
 
-  private static getTaxRecommendation(): string {
-    const now = new Date();
-    const month = now.getMonth();
+  private static getTaxRecommendations(income: number, config: TaxConfig, profile: any): string[] {
+    const recommendations = [];
     
-    if (month === 6) { // July
-      return "⚠️ File your tax return by July 25";
+    if (income > config.limits.yearly * 0.8) {
+      recommendations.push('⚠️ Приближение к годовому лимиту дохода');
     }
-    return `Next tax report due: ${this.getNextQuarterEnd().toLocaleDateString('ru-RU')}`;
+
+    if (profile.taxSystem === TaxSystem.NPD && income > 2400000) {
+      recommendations.push('🚨 Превышен лимит для НПД. Рекомендуется перейти на УСН');
+    }
+
+    if (profile.taxSystem === TaxSystem.USN_INCOME && income > config.limits.yearly * 0.9) {
+      recommendations.push('⚠️ Приближение к лимиту УСН. Рассмотрите переход на ОСН');
+    }
+
+    return recommendations;
   }
 }
