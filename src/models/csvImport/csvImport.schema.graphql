@@ -1,0 +1,9 @@
+type CsvImportSession {
+  id: ID!
+  userId: ID!
+  filename: String!
+  status: String!
+  processedCount: Int!
+  createdAt: String!
+  updatedAt: String!
+}

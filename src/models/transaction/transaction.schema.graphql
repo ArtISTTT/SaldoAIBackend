@@ -1,0 +1,12 @@
+type Transaction {
+  id: ID!
+  userId: ID!
+  accountId: ID!
+  amount: Float!
+  type: String!
+  category: String!
+  description: String
+  date: String!
+  createdAt: String!
+  updatedAt: String!
+}

@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "target": "es6",
+    "module": "commonjs",
+    "strict": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "baseUrl": "./",          // базовая папка для alias'ов
+    "paths": {
+      "@/*": ["src/*"],
+    },
+  },
+  "include": ["src"]
+}

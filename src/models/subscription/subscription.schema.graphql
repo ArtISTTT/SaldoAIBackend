@@ -1,0 +1,10 @@
+type Subscription {
+  id: ID!
+  userId: ID!
+  planId: ID!
+  startDate: String!
+  endDate: String!
+  active: Boolean!
+  createdAt: String!
+  updatedAt: String!
+}

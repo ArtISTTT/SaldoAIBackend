@@ -1,0 +1,10 @@
+type Account {
+  id: ID!
+  userId: ID!
+  name: String!
+  type: String!
+  balance: Float!
+  currency: String!
+  createdAt: String!
+  updatedAt: String!
+}

@@ -1,0 +1,9 @@
+type Notification {
+  id: ID!
+  userId: ID!
+  type: String!
+  message: String!
+  read: Boolean!
+  createdAt: String!
+  updatedAt: String!
+}
