@@ -114,6 +114,33 @@ const analyticsTypeDefs = gql`
     summary: String!
   }
 
+  type BusinessHealthMetrics {
+    profitMargin: String!
+    cashFlowStatus: String!
+    roiStatus: String!
+    recurringExpensesTotal: Float!
+  }
+
+  type BusinessHealthOverview {
+    healthScore: Float!
+    status: String!
+    summary: String!
+  }
+
+  type BusinessHealthProjections {
+    cashFlow: [MonthlyProjection!]!
+    nextTaxDue: String!
+    estimatedTaxAmount: Float!
+  }
+
+  type BusinessHealthDashboard {
+    overview: BusinessHealthOverview!
+    metrics: BusinessHealthMetrics!
+    projections: BusinessHealthProjections!
+    alerts: [Insight!]!
+    recommendations: [String!]!
+  }
+
   extend type Query {
     statsSummary: SummaryStats!
     statsByCategory: [CategoryStat!]!
@@ -125,6 +152,7 @@ const analyticsTypeDefs = gql`
     weeklyStats: [WeeklyStat!]!
     kpiStats: KPIStats!
     taxReminders: [TaxReminder!]!
+    businessHealth: BusinessHealthDashboard!
     insights: [Insight!]!
     categoriesStats(type: String!): [CategoryStatWithAmount!]!
   }

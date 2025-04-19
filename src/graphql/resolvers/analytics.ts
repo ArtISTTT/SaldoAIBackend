@@ -38,6 +38,8 @@ const standardDeviation = (arr: number[]): number => {
 
 import { ProfitabilityService } from '@/services/profitabilityService';
 import { CashFlowService } from '@/services/cashFlowService';
+import { BusinessHealthService } from '@/services/businessHealthService'; // Import the new service
+
 
 const analyticsResolvers = {
   Query: {
@@ -58,7 +60,7 @@ const analyticsResolvers = {
     statsSummary: async (_: any, __: any, context: any) => {
       if (!context.user) throw new Error('Unauthorized');
       const transactions = await TransactionModel.find({ userId: context.user.id });
-      
+
       const totalIncome = transactions
         .filter((tx: any) => tx.type === 'income')
         .reduce((sum: number, tx: any) => sum + Number(tx.amount), 0);
@@ -162,7 +164,7 @@ const analyticsResolvers = {
         const count = txs.length;
         categoryStats.push({ category, total, count });
       }
-    
+
       return categoryStats;
     },
 
@@ -210,8 +212,12 @@ const analyticsResolvers = {
 
     insights: async (_: any, __: any, context: any) => {
       if (!context.user) throw new Error('Unauthorized');
-
       return await generateInsights(context.user.id);
+    },
+
+    businessHealth: async (_: any, __: any, context: any) => {
+      if (!context.user) throw new Error('Unauthorized');
+      return BusinessHealthService.generateHealthDashboard(context.user.id);
     },
   },
 };
