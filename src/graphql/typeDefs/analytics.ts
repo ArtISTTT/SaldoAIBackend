@@ -97,6 +97,23 @@ const analyticsTypeDefs = gql`
     message: String!
   }
 
+  type MonthlyProjection {
+    month: String!
+    projectedIncome: Float!
+    projectedExpense: Float!
+    projectedBalance: Float!
+    seasonalityImpact: String!
+  }
+
+  type CashFlowProjection {
+    currentBalance: Float!
+    monthlyProjections: [MonthlyProjection!]!
+    hasCashGap: Boolean!
+    cashGapMonth: String
+    lowestProjectedBalance: Float!
+    summary: String!
+  }
+
   extend type Query {
     statsSummary: SummaryStats!
     statsByCategory: [CategoryStat!]!
@@ -104,6 +121,7 @@ const analyticsTypeDefs = gql`
     dailyStats: [DailyStat!]!
     simulateSalaryWithdrawal(targetSalary: Float!): SalarySimulation!
     calculateNetProfit: NetProfitReport!
+    projectCashFlow(monthsAhead: Int): CashFlowProjection!
     weeklyStats: [WeeklyStat!]!
     kpiStats: KPIStats!
     taxReminders: [TaxReminder!]!

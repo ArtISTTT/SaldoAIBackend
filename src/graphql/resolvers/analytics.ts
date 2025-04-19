@@ -37,9 +37,14 @@ const standardDeviation = (arr: number[]): number => {
 };
 
 import { ProfitabilityService } from '@/services/profitabilityService';
+import { CashFlowService } from '@/services/cashFlowService';
 
 const analyticsResolvers = {
   Query: {
+    projectCashFlow: async (_: any, { monthsAhead }: { monthsAhead?: number }, context: any) => {
+      if (!context.user) throw new Error('Unauthorized');
+      return CashFlowService.projectCashFlow(context.user.id, monthsAhead);
+    },
     simulateSalaryWithdrawal: async (_: any, { targetSalary }: { targetSalary: number }, context: any) => {
       if (!context.user) throw new Error('Unauthorized');
       return ProfitabilityService.simulateSalaryWithdrawal(context.user.id, targetSalary);
