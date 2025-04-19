@@ -80,11 +80,30 @@ const analyticsTypeDefs = gql`
     CUSTOM
   }
 
+  type SalarySimulation {
+    isSustainable: Boolean!
+    maxSustainableSalary: Float!
+    monthlyIncome: Float!
+    monthlyExpense: Float!
+    message: String!
+  }
+
+  type NetProfitReport {
+    income: Float!
+    expenses: Float!
+    subscriptions: Float!
+    taxes: Float!
+    netProfit: Float!
+    message: String!
+  }
+
   extend type Query {
     statsSummary: SummaryStats!
     statsByCategory: [CategoryStat!]!
     statsByMonth: [MonthStat!]!
     dailyStats: [DailyStat!]!
+    simulateSalaryWithdrawal(targetSalary: Float!): SalarySimulation!
+    calculateNetProfit: NetProfitReport!
     weeklyStats: [WeeklyStat!]!
     kpiStats: KPIStats!
     taxReminders: [TaxReminder!]!

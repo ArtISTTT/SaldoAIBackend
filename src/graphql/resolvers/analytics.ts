@@ -36,8 +36,20 @@ const standardDeviation = (arr: number[]): number => {
   return Math.sqrt(avgSqDiff);
 };
 
+import { ProfitabilityService } from '@/services/profitabilityService';
+
 const analyticsResolvers = {
   Query: {
+    simulateSalaryWithdrawal: async (_: any, { targetSalary }: { targetSalary: number }, context: any) => {
+      if (!context.user) throw new Error('Unauthorized');
+      return ProfitabilityService.simulateSalaryWithdrawal(context.user.id, targetSalary);
+    },
+
+    calculateNetProfit: async (_: any, __: any, context: any) => {
+      if (!context.user) throw new Error('Unauthorized');
+      return ProfitabilityService.calculateNetProfit(context.user.id);
+    },
+
     statsSummary: async (_: any, __: any, context: any) => {
       if (!context.user) throw new Error('Unauthorized');
       const transactions = await TransactionModel.find({ userId: context.user.id });
