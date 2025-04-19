@@ -52,7 +52,7 @@ const transactionTypeDefs = gql`
     accountId: ID!
     amount: Float!
     type: String!
-    category: String!
+    category: TransactionCategory!
     description: String
     date: String!
   }

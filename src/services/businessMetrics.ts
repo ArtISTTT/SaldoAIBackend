@@ -1,8 +1,8 @@
-
 import { TransactionModel } from '@/models/transaction/transaction.model';
 import { Types } from 'mongoose';
 
 export class BusinessMetricsService {
+  // Анализ роста расходов по категориям
   static async analyzeCategoryGrowth(userId: Types.ObjectId) {
     const lastMonth = new Date();
     lastMonth.setMonth(lastMonth.getMonth() - 1);
@@ -28,26 +28,26 @@ export class BusinessMetricsService {
       const prevAmount = previousMonthByCategory.get(category) || 0;
       const growth = prevAmount ? (amount - prevAmount) / prevAmount : 1;
       
-      if (growth >= 0.8) { // 80% growth
+      if (growth >= 0.8) { // Рост на 80% и более
         alerts.push({
           category,
           growth: growth * 100,
-          message: `⚠️ ${category} expenses grew by ${Math.round(growth * 100)}%`
+          message: `⚠️ Расходы по категории "${category}" выросли на ${Math.round(growth * 100)}%`
         });
       }
     }
 
-    // Check category share
+    // Проверка доли категории в общих расходах
     const totalExpense = Array.from(lastMonthByCategory.values())
       .reduce((sum, amount) => sum + amount, 0);
 
     for (const [category, amount] of lastMonthByCategory) {
       const share = amount / totalExpense;
-      if (share > 0.45) { // 45% threshold
+      if (share > 0.45) { // Порог 45%
         alerts.push({
           category,
           share: share * 100,
-          message: `📊 ${category} takes ${Math.round(share * 100)}% of expenses`
+          message: `📊 Категория "${category}" составляет ${Math.round(share * 100)}% от всех расходов`
         });
       }
     }
@@ -55,6 +55,7 @@ export class BusinessMetricsService {
     return alerts;
   }
 
+  // Расчёт ROI (окупаемость инвестиций в рекламу)
   static async calculateROI(userId: Types.ObjectId) {
     const lastMonth = new Date();
     lastMonth.setMonth(lastMonth.getMonth() - 1);
@@ -82,6 +83,7 @@ export class BusinessMetricsService {
     };
   }
 
+  // Анализ интервалов между оплатами
   static async analyzePaymentIntervals(userId: Types.ObjectId) {
     const transactions = await TransactionModel.find({
       userId,
@@ -111,6 +113,7 @@ export class BusinessMetricsService {
     };
   }
 
+  // Вспомогательная функция: группировка по категориям
   private static groupByCategory(transactions: any[]): Map<string, number> {
     const map = new Map<string, number>();
     for (const tx of transactions) {
@@ -120,16 +123,18 @@ export class BusinessMetricsService {
     return map;
   }
 
+  // Вспомогательная функция: формирование сообщения по ROI
   private static getRoiMessage(roi: number): string {
-    if (roi > 2) return "🔥 Marketing is highly efficient";
-    if (roi > 1) return "✅ Marketing is profitable";
-    return "⚠️ Marketing ROI needs improvement";
+    if (roi > 2) return "🔥 Маркетинг работает очень эффективно";
+    if (roi > 1) return "✅ Маркетинг приносит прибыль";
+    return "⚠️ ROI по маркетингу нуждается в улучшении";
   }
 
+  // Вспомогательная функция: сообщение по интервалам оплат
   private static getIntervalMessage(avg: number, recent: number): string {
     if (recent > avg * 1.2) {
-      return "⚠️ Payment intervals are increasing - possible decrease in orders";
+      return "⚠️ Интервалы между платежами растут — возможно снижение заказов";
     }
-    return `✅ Average payment interval: ${Math.round(avg)} days`;
+    return `✅ Средний интервал между платежами: ${Math.round(avg)} дней`;
   }
 }

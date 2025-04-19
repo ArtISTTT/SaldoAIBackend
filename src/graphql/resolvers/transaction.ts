@@ -1,5 +1,6 @@
 import { TransactionModel } from '@/models/transaction/transaction.model';
 import { categorizeTransaction } from '@/utils/categorize';
+import crypto from 'crypto';
 
 const transactionResolvers = {
   Query: {
@@ -52,10 +53,14 @@ const transactionResolvers = {
     addTransaction: async (_: any, { input }: any, context: any) => {
       if (!context.user) throw new Error('Unauthorized');
 
+      const signatureSource = `${context.user.id}_${Math.abs(input.amount)}_${input.description.trim().toLowerCase()}`;
+      const signature = crypto.createHash('md5').update(signatureSource).digest('hex');
+
       const category = input.description ? await categorizeTransaction(input.description) : '';
       return new TransactionModel({
         ...input,
         category,
+        signature,
         userId: context.user.id,
       }).save();
     },

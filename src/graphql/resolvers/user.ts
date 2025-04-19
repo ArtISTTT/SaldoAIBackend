@@ -7,7 +7,15 @@ const userResolvers = {
   Query: {
     me: async (_parent: any, _args: any, context: any) => {
       if (!context.user) return null;
-      return UserModel.findById(context.user.id);
+
+      const account = await AccountModel.findOne({ userId: context.user.id });
+
+      const user = await UserModel.findById(context.user.id);
+
+      return {
+        user,
+        account
+      }
     },
 
     getUser: async (_parent: any, { id }: { id: string }) => {

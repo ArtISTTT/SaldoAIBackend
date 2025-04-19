@@ -93,19 +93,21 @@ export class CashFlowService {
 
   private static determineSeasonalImpact(avgIncome: number, avgExpense: number): string {
     const ratio = avgIncome / avgExpense;
-    if (ratio > 1.2) return 'positive';
-    if (ratio < 0.8) return 'negative';
-    return 'neutral';
+    if (ratio > 1.2) return 'позитивный';
+    if (ratio < 0.8) return 'негативный';
+    return 'нейтральный';
   }
 
   private static generateSummary(projections: any[], currentBalance: number): string {
     const endBalance = projections[projections.length - 1].projectedBalance;
-    const trend = endBalance > currentBalance ? 'positive' : 'negative';
+    const trend = endBalance > currentBalance ? 'позитивный' : 'негативный';
     const changePercent = Math.abs(((endBalance - currentBalance) / currentBalance) * 100).toFixed(1);
 
-    if (trend === 'positive') {
-      return `📈 Projected ${changePercent}% balance growth over next ${projections.length} months`;
+    if (trend === 'позитивный') {
+      return `📈 Прогнозируемый ${changePercent}% рост баланса за следующие ${projections.length} месяцев`;
     }
-    return `📉 Projected ${changePercent}% balance decrease over next ${projections.length} months`;
+
+    
+    return `📉 Прогнозируемый ${changePercent}% падение баланса за следующие ${projections.length} месяцев`;
   }
 }

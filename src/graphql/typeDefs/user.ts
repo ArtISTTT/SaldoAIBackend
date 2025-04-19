@@ -10,8 +10,13 @@ const userTypeDefs = gql`
     updatedAt: String!
   }
 
+  type Me {
+    user: User
+    account: Account
+  }
+
   type Query {
-    me: User
+    me: Me
     getUser(id: ID!): User
   }
 

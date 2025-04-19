@@ -94,26 +94,26 @@ export class BusinessHealthService {
   }
 
   private static getHealthStatus(score: number): string {
-    if (score >= 80) return 'excellent';
-    if (score >= 60) return 'good';
-    if (score >= 40) return 'fair';
-    return 'needs_attention';
+    if (score >= 80) return 'Отлично';
+    if (score >= 60) return 'Хорошо';
+    if (score >= 40) return 'Плохо';
+    return 'Критично';
   }
 
   private static generateSummary(score: number, alerts: any[]): string {
     const status = this.getHealthStatus(score);
     const alertCount = alerts.length;
 
-    if (status === 'excellent') {
-      return `🌟 Business is thriving with a health score of ${score.toFixed(1)}`;
+    if (status === 'Отлично') {
+      return `🌟 Бизнес процветает, индекс здоровья составляет ${score.toFixed(1)}`;
     }
-    if (status === 'good') {
-      return `✅ Business is healthy with ${alertCount} areas for optimization`;
+    if (status === 'Хорошо') {
+      return `✅ У бизнеса хорошее состояние, но есть ${alertCount} область(-ей) для оптимизации`;
     }
-    if (status === 'fair') {
-      return `⚠️ Business needs attention in ${alertCount} areas`;
+    if (status === 'Плохо') {
+      return `⚠️ Бизнес требует внимания в ${alertCount} областях`;
     }
-    return `🚨 Immediate action required - ${alertCount} critical issues identified`;
+    return `🚨 Необходимы срочные меры — выявлено ${alertCount} критических проблем`;
   }
 
   private static generateAlerts(data: any): any[] {
@@ -122,15 +122,15 @@ export class BusinessHealthService {
     // Add category growth alerts
     if (data.categoryGrowth) {
       alerts.push(...data.categoryGrowth.map((alert: any) => ({
-        message: alert.message,
-        severity: 'warning'
+        message: `🚨 Обнаружен возможный кассовый разрыв в ${data.cashFlow.cashGapMonth}`,
+        severity: 'critical'
       })));
     }
 
     // Add cash flow alerts
     if (data.cashFlow.hasCashGap) {
       alerts.push({
-        message: `🚨 Potential cash gap detected in ${data.cashFlow.cashGapMonth}`,
+        message: '🚨 Бизнес работает в убыток',
         severity: 'critical'
       });
     }
@@ -141,15 +141,13 @@ export class BusinessHealthService {
         message: '🚨 Business is operating at a loss',
         severity: 'critical'
       });
-    }s'
-      });
     }
 
     // Add tax alerts
     if (new Date(data.taxes.nextPaymentDate).getTime() - Date.now() < 15 * 24 * 60 * 60 * 1000) {
       alerts.push({
         type: 'warning',
-        message: `⚠️ Tax payment of ${data.taxes.taxAmount.toFixed(2)} due soon`
+        message: `⚠️ Скоро срок уплаты налога — ${data.taxes.taxAmount.toFixed(2)}`
       });
     }
 
@@ -160,19 +158,19 @@ export class BusinessHealthService {
     const recommendations = [];
 
     if (data.healthScore < 60) {
-      recommendations.push('📊 Consider professional financial consultation');
+      recommendations.push('📊 Рекомендуется обратиться за профессиональной финансовой консультацией');
     }
 
     if (data.cashFlow.hasCashGap) {
-      recommendations.push('💰 Build emergency fund to cover projected cash gaps');
+      recommendations.push('💰 Создайте резервный фонд для покрытия прогнозируемых кассовых разрывов');
     }
 
     if (data.recurringExpenses.length > 0) {
-      recommendations.push('🔍 Review recurring expenses for potential cost optimization');
+      recommendations.push('🔍 Пересмотрите регулярные расходы на предмет возможной оптимизации');
     }
 
     if (data.profitability.netProfit > 0 && data.profitability.netProfit < data.profitability.income * 0.1) {
-      recommendations.push('📈 Focus on improving profit margins through cost reduction or price optimization');
+      recommendations.push('📈 Сфокусируйтесь на повышении рентабельности за счёт снижения затрат или оптимизации цен');
     }
 
     return recommendations;
