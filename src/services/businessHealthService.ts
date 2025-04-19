@@ -120,21 +120,28 @@ export class BusinessHealthService {
     const alerts = [];
 
     // Add category growth alerts
-    alerts.push(...data.categoryGrowth);
+    if (data.categoryGrowth) {
+      alerts.push(...data.categoryGrowth.map((alert: any) => ({
+        message: alert.message,
+        severity: 'warning'
+      })));
+    }
 
     // Add cash flow alerts
     if (data.cashFlow.hasCashGap) {
       alerts.push({
-        type: 'critical',
-        message: `🚨 Potential cash gap detected in ${data.cashFlow.cashGapMonth}`
+        message: `🚨 Potential cash gap detected in ${data.cashFlow.cashGapMonth}`,
+        severity: 'critical'
       });
     }
 
     // Add profitability alerts
     if (data.profitability.netProfit < 0) {
       alerts.push({
-        type: 'critical',
-        message: '🚨 Business is operating at a loss'
+        message: '🚨 Business is operating at a loss',
+        severity: 'critical'
+      });
+    }s'
       });
     }
 
