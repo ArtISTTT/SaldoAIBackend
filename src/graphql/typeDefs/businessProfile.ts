@@ -16,8 +16,9 @@ export default gql`
   }
 
   type TaxLimits {
-    yearly: Float
-    monthly: Float
+    yearly: Float!
+    monthly: Float!
+    rate: Float!
   }
 
   type BusinessProfile {
@@ -26,15 +27,19 @@ export default gql`
     taxSystem: TaxSystem!
     customTaxRate: Float
     customTaxLimits: TaxLimits
+    taxConfig: TaxLimits!
+    createdAt: String!
+    updatedAt: String!
   }
 
   input TaxLimitsInput {
-    yearly: Float
-    monthly: Float
+    yearly: Float!
+    monthly: Float!
   }
 
   extend type Query {
     businessProfile: BusinessProfile
+    taxSystemInfo(taxSystem: TaxSystem!): TaxLimits!
   }
 
   extend type Mutation {
@@ -43,6 +48,6 @@ export default gql`
       taxSystem: TaxSystem!
       customTaxRate: Float
       customTaxLimits: TaxLimitsInput
-    ): BusinessProfile
+    ): BusinessProfile!
   }
 `;

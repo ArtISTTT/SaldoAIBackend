@@ -1,46 +1,7 @@
-
-import { TransactionModel } from '@/models/transaction/transaction.model';
-import { BusinessProfileModel, BusinessType, TaxSystem } from '@/models/businessProfile/businessProfile.model';
 import { Types } from 'mongoose';
-
-interface TaxConfig {
-  rate: number;
-  limits: {
-    yearly: number;
-    monthly: number;
-  };
-}
-
-const DEFAULT_TAX_CONFIGS: Record<TaxSystem, TaxConfig> = {
-  [TaxSystem.NPD]: {
-    rate: 0.04, // 4% для физлиц
-    limits: {
-      yearly: 2400000, // 2.4M руб
-      monthly: 200000 // 200K руб
-    }
-  },
-  [TaxSystem.USN_INCOME]: {
-    rate: 0.06, // 6%
-    limits: {
-      yearly: 60000000, // 60M руб
-      monthly: 5000000 // ~5M руб
-    }
-  },
-  [TaxSystem.USN_INCOME_EXPENSE]: {
-    rate: 0.15, // 15%
-    limits: {
-      yearly: 60000000,
-      monthly: 5000000
-    }
-  },
-  [TaxSystem.OSN]: {
-    rate: 0.20, // 20%
-    limits: {
-      yearly: Infinity,
-      monthly: Infinity
-    }
-  }
-};
+import { TransactionModel } from '@/models/transaction/transaction.model';
+import { BusinessProfileModel } from '@/models/businessProfile/businessProfile.model';
+import { TaxSystem } from '@/constants/enums';
 
 export class TaxService {
   static async calculateTaxes(userId: Types.ObjectId) {
@@ -62,20 +23,16 @@ export class TaxService {
       .filter(t => t.type === 'income')
       .reduce((sum, t) => sum + t.amount, 0);
 
-    const config = profile.customTaxRate ? {
-      rate: profile.customTaxRate,
-      limits: profile.customTaxLimits || DEFAULT_TAX_CONFIGS[profile.taxSystem].limits
-    } : DEFAULT_TAX_CONFIGS[profile.taxSystem];
+    const taxConfig = profile.taxConfig;
+    const taxAmount = income * taxConfig.rate;
 
-    const taxAmount = income * config.rate;
-    
     return {
       taxAmount,
       nextPaymentDate: this.getNextQuarterEnd(),
       type: profile.businessType,
       taxSystem: profile.taxSystem,
-      limits: config.limits,
-      recommendations: this.getTaxRecommendations(income, config, profile)
+      limits: taxConfig.limits,
+      recommendations: this.getTaxRecommendations(income, taxConfig, profile)
     };
   }
 
@@ -85,9 +42,9 @@ export class TaxService {
     return new Date(now.getFullYear(), (quarter + 1) * 3, 0);
   }
 
-  private static getTaxRecommendations(income: number, config: TaxConfig, profile: any): string[] {
+  private static getTaxRecommendations(income: number, config: any, profile: any): string[] {
     const recommendations = [];
-    
+
     if (income > config.limits.yearly * 0.8) {
       recommendations.push('⚠️ Приближение к годовому лимиту дохода');
     }
