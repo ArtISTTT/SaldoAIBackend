@@ -1,3 +1,4 @@
+// src/graphql/resolvers/analytics/index.ts
 import { TransactionModel } from '@/models/transaction/transaction.model';
 import { generateInsights } from '@/utils/generateInsights';
 
@@ -222,4 +223,9 @@ const analyticsResolvers = {
   },
 };
 
+export default analyticsResolvers;
+
+
+// src/graphql/resolvers/analytics.ts
+import analyticsResolvers from './analytics/index';
 export default analyticsResolvers;
