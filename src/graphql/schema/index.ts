@@ -19,6 +19,8 @@ import csvImportResolvers from '../resolvers/csvImport';
 import analyticsTypeDefs from '../typeDefs/analytics';
 import analyticsResolvers from '../resolvers/analytics';
 import commonTypeDefs from '../typeDefs/common';
+import businessProfileResolvers from '../resolvers/businessProfile';
+import businessProfileTypeDefs from '../typeDefs/businessProfile';
 
 export const typeDefs = mergeTypeDefs([
   userTypeDefs,
@@ -29,7 +31,8 @@ export const typeDefs = mergeTypeDefs([
   subscriptionPlanTypeDefs,
   csvImportTypeDefs,
   analyticsTypeDefs,
-  commonTypeDefs
+  commonTypeDefs,
+  businessProfileTypeDefs,
 ]);
 
 export const resolvers = mergeResolvers([
@@ -40,7 +43,8 @@ export const resolvers = mergeResolvers([
   subscriptionResolvers,
   subscriptionPlanResolvers,
   csvImportResolvers,
-  analyticsResolvers
+  analyticsResolvers,
+  businessProfileResolvers,
 ]);
 
 export const schema = makeExecutableSchema({

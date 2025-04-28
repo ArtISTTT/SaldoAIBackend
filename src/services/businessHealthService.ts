@@ -4,10 +4,13 @@ import { BusinessMetricsService } from './businessMetrics';
 import { CashFlowService } from './cashFlowService';
 import { FinancialMetricsService } from './financialMetrics';
 import { ProfitabilityService } from './profitabilityService';
-import { TaxService, TaxationType } from './taxService';
+import { TaxService } from './taxService';
+import { BusinessProfileModel } from '@/models/businessProfile/businessProfile.model';
+import { BusinessType } from '@/constants';
 
 export class BusinessHealthService {
   static async generateHealthDashboard(userId: Types.ObjectId) {
+    const businessProfile = await BusinessProfileModel.findOne({ userId });
     const [
       categoryGrowth,
       roi,
@@ -23,7 +26,7 @@ export class BusinessHealthService {
       CashFlowService.projectCashFlow(userId, 3),
       FinancialMetricsService.findRecurringExpenses(userId),
       ProfitabilityService.calculateNetProfit(userId),
-      TaxService.calculateTaxes(userId, TaxationType.SELF_EMPLOYED)
+      TaxService.calculateTaxes(userId)
     ]);
 
     const healthScore = this.calculateHealthScore({
@@ -153,7 +156,7 @@ export class BusinessHealthService {
 
     // Add tax system specific alerts
     if (data.taxes.recommendations) {
-      data.taxes.recommendations.forEach(rec => {
+      data.taxes.recommendations.forEach((rec: string) => {
         alerts.push({
           severity: rec.includes('🚨') ? 'critical' : 'warning',
           message: rec
