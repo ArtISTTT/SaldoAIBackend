@@ -21,6 +21,11 @@ export default gql`
     rate: Float!
   }
 
+  input TaxLimitsInput {
+    yearly: Float!
+    monthly: Float!
+  }
+
   type BusinessProfile {
     id: ID!
     businessType: BusinessType!
