@@ -1,7 +1,8 @@
+
 import { Types } from 'mongoose';
 import { TransactionModel } from '@/models/transaction/transaction.model';
 import { BusinessProfileModel } from '@/models/businessProfile/businessProfile.model';
-import { TaxSystem } from '@/constants/enums';
+import { TaxSystem, TAX_LIMITS } from '@/constants/enums';
 
 export class TaxService {
   static async calculateTaxes(userId: Types.ObjectId) {
@@ -27,13 +28,15 @@ export class TaxService {
     const taxRate = profile.customTaxRate || baseConfig.rate;
     const taxAmount = income * taxRate;
 
+    const limits = profile.customTaxLimits || baseConfig;
+
     return {
       taxAmount,
       nextPaymentDate: this.getNextQuarterEnd(),
       type: profile.businessType,
       taxSystem: profile.taxSystem,
-      limits: taxConfig.limits,
-      recommendations: this.getTaxRecommendations(income, taxConfig, profile)
+      limits,
+      recommendations: this.getTaxRecommendations(income, limits, profile)
     };
   }
 
@@ -43,10 +46,10 @@ export class TaxService {
     return new Date(now.getFullYear(), (quarter + 1) * 3, 0);
   }
 
-  private static getTaxRecommendations(income: number, config: any, profile: any): string[] {
+  private static getTaxRecommendations(income: number, limits: { yearly: number; monthly: number }, profile: any): string[] {
     const recommendations = [];
 
-    if (income > config.limits.yearly * 0.8) {
+    if (income > limits.yearly * 0.8) {
       recommendations.push('⚠️ Приближение к годовому лимиту дохода');
     }
 
@@ -54,7 +57,7 @@ export class TaxService {
       recommendations.push('🚨 Превышен лимит для НПД. Рекомендуется перейти на УСН');
     }
 
-    if (profile.taxSystem === TaxSystem.USN_INCOME && income > config.limits.yearly * 0.9) {
+    if (profile.taxSystem === TaxSystem.USN_INCOME && income > limits.yearly * 0.9) {
       recommendations.push('⚠️ Приближение к лимиту УСН. Рассмотрите переход на ОСН');
     }
 
