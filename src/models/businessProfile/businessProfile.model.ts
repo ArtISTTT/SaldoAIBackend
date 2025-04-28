@@ -49,11 +49,11 @@ const businessProfileSchema = new Schema<IBusinessProfile>({
 });
 
 businessProfileSchema.virtual('taxConfig').get(function() {
-  const baseConfig = TAX_LIMITS[this.taxSystem];
+  const baseConfig = TAX_LIMITS[this.taxSystem] || TAX_LIMITS[TaxSystem.USN_INCOME];
   return {
-    yearly: this.customTaxLimits?.yearly || baseConfig.yearly,
-    monthly: this.customTaxLimits?.monthly || baseConfig.monthly,
-    rate: this.customTaxRate || baseConfig.rate
+    yearly: this.customTaxLimits?.yearly ?? baseConfig.yearly,
+    monthly: this.customTaxLimits?.monthly ?? baseConfig.monthly,
+    rate: this.customTaxRate ?? baseConfig.rate
   };
 });
 
