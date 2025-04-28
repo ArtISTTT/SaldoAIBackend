@@ -23,8 +23,9 @@ export class TaxService {
       .filter(t => t.type === 'income')
       .reduce((sum, t) => sum + t.amount, 0);
 
-    const taxConfig = profile.taxConfig;
-    const taxAmount = income * taxConfig.rate;
+    const baseConfig = TAX_LIMITS[profile.taxSystem];
+    const taxRate = profile.customTaxRate || baseConfig.rate;
+    const taxAmount = income * taxRate;
 
     return {
       taxAmount,
