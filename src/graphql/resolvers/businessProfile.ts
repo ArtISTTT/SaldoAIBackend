@@ -6,17 +6,27 @@ const businessProfileResolvers = {
   Query: {
     businessProfile: async (_: any, __: any, context: any) => {
       if (!context.user) throw new Error('Unauthorized');
+    
       let profile = await BusinessProfileModel.findOne({ userId: context.user.id });
-
+    
       if (!profile) {
         profile = await BusinessProfileModel.create({
           userId: context.user.id,
           taxSystem: TaxSystem.USN_INCOME,
-          businessType: BusinessType.INDIVIDUAL_ENTREPRENEUR
+          businessType: BusinessType.INDIVIDUAL_ENTREPRENEUR,
         });
       }
-
-      return profile;
+    
+      // Fix: sanitize customTaxLimits before returning
+      const plainProfile = profile.toObject(); // превращаем в обычный объект
+      if (plainProfile.customTaxLimits) {
+        const { yearly, monthly } = plainProfile.customTaxLimits;
+        if (yearly == null || monthly == null) {
+          plainProfile.customTaxLimits = null as any;
+        }
+      }
+    
+      return plainProfile;
     },
 
     taxSystemInfo: async (_: any, { taxSystem }: { taxSystem: TaxSystem }) => {
