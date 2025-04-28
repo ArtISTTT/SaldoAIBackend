@@ -51,8 +51,9 @@ const businessProfileSchema = new Schema<IBusinessProfile>({
 businessProfileSchema.virtual('taxConfig').get(function() {
   const baseConfig = TAX_LIMITS[this.taxSystem];
   return {
-    rate: this.customTaxRate || baseConfig.rate,
-    limits: this.customTaxLimits || baseConfig
+    yearly: this.customTaxLimits?.yearly || baseConfig.yearly,
+    monthly: this.customTaxLimits?.monthly || baseConfig.monthly,
+    rate: this.customTaxRate || baseConfig.rate
   };
 });
 
