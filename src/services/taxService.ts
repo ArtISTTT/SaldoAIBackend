@@ -6,9 +6,14 @@ import { TaxSystem, TAX_LIMITS } from '@/constants/enums';
 
 export class TaxService {
   static async calculateTaxes(userId: Types.ObjectId) {
-    const profile = await BusinessProfileModel.findOne({ userId });
+    let profile = await BusinessProfileModel.findOne({ userId });
+
     if (!profile) {
-      throw new Error('Business profile not found');
+      profile = await BusinessProfileModel.create({
+        userId,
+        taxSystem: TaxSystem.USN_INCOME,
+        businessType: 'individual'
+      });
     }
 
     const currentYear = new Date().getFullYear();
