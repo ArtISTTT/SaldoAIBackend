@@ -1,3 +1,4 @@
+import { transactionCategoryToStrings } from './../utils/transactionCategoryToStrings';
 import { TransactionModel } from '@/models/transaction/transaction.model';
 import { Types } from 'mongoose';
 
@@ -32,7 +33,7 @@ export class BusinessMetricsService {
         alerts.push({
           category,
           growth: growth * 100,
-          message: `⚠️ Расходы по категории "${category}" выросли на ${Math.round(growth * 100)}%`
+          message: `⚠️ Расходы по категории "${transactionCategoryToStrings[category]}" выросли на ${Math.round(growth * 100)}%`
         });
       }
     }
@@ -47,7 +48,7 @@ export class BusinessMetricsService {
         alerts.push({
           category,
           share: share * 100,
-          message: `📊 Категория "${category}" составляет ${Math.round(share * 100)}% от всех расходов`
+          message: `📊 Категория "${transactionCategoryToStrings[category]}" составляет ${Math.round(share * 100)}% от всех расходов`
         });
       }
     }

@@ -125,8 +125,8 @@ export class BusinessHealthService {
     // Add category growth alerts
     if (data.categoryGrowth) {
       alerts.push(...data.categoryGrowth.map((alert: any) => ({
-        message: `🚨 Обнаружен возможный кассовый разрыв в ${data.cashFlow.cashGapMonth}`,
-        severity: 'critical'
+        message: alert.message,
+        severity: 'info',
       })));
     }
 
@@ -141,7 +141,7 @@ export class BusinessHealthService {
     // Add profitability alerts
     if (data.profitability.netProfit < 0) {
       alerts.push({
-        message: '🚨 Business is operating at a loss',
+        message: '🚨 Бизнес работает в убыток',
         severity: 'critical'
       });
     }
