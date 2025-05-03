@@ -1,6 +1,7 @@
+
 import { Schema, model, Document, Types } from 'mongoose';
 
-export interface ICsvImportSession extends Document {
+export interface IImportSession extends Document {
   userId: Types.ObjectId;
   filename: string;
   status: 'pending' | 'processing' | 'completed' | 'error';
@@ -9,7 +10,7 @@ export interface ICsvImportSession extends Document {
   updatedAt: Date;
 }
 
-const csvImportSchema = new Schema<ICsvImportSession>(
+const importSchema = new Schema<IImportSession>(
   {
     userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     filename: { type: String, required: true },
@@ -19,4 +20,4 @@ const csvImportSchema = new Schema<ICsvImportSession>(
   { timestamps: true },
 );
 
-export const CsvImportModel = model<ICsvImportSession>('CsvImportSession', csvImportSchema);
+export const ImportModel = model<IImportSession>('ImportSession', importSchema);

@@ -26,6 +26,7 @@
     "express": "^5.1.0",
     "graphql": "^16.10.0",
     "graphql-tag": "^2.12.6",
+    "graphql-upload": "^17.0.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.13.2",
     "openai": "^4.94.0",

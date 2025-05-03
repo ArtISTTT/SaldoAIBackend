@@ -1,31 +1,60 @@
-import { CsvImportModel } from '@/models/csvImport/csvImport.model';
+
+import { ImportModel } from '@/models/csvImport/csvImport.model';
 import { TransactionModel } from '@/models/transaction/transaction.model';
-import { parse } from 'csv-parse/sync';
-import { Buffer } from 'buffer';
 import { AccountModel } from '@/models/account/account.model';
+import { parse } from 'csv-parse/sync';
+import { read as readXLSX, utils as xlsxUtils } from 'xlsx';
 import crypto from 'crypto';
 import { categorizeTransaction } from '@/utils/categorize';
+import { identifyColumns } from '@/services/columnMappingService';
 
-const csvImportResolvers = {
+const processFileContent = async (buffer: Buffer, filename: string) => {
+  let records = [];
+  
+  if (filename.toLowerCase().endsWith('.xlsx')) {
+    const workbook = readXLSX(buffer);
+    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+    records = xlsxUtils.sheet_to_json(firstSheet);
+  } else {
+    const csvText = buffer.toString('utf-8');
+    records = parse(csvText, {
+      columns: true,
+      skip_empty_lines: true,
+      trim: true,
+    });
+  }
+
+  const headers = Object.keys(records[0] || {});
+  const columnMapping = await identifyColumns(headers);
+  
+  return { records, columnMapping };
+};
+
+const fileImportResolvers = {
   Query: {
-    csvImportSessions: async (_: any, __: any, context: any) => {
+    importSessions: async (_: any, __: any, context: any) => {
       if (!context.user) throw new Error('Unauthorized');
-      return CsvImportModel.find({ userId: context.user.id }).sort({ createdAt: -1 });
+      return ImportModel.find({ userId: context.user.id }).sort({ createdAt: -1 });
     },
   },
 
   Mutation: {
-    startImport: async (_: any, { filename, base64 }: any, context: any) => {
+    startImport: async (_: any, { file }: any, context: any) => {
       if (!context.user) throw new Error('Unauthorized');
 
-      let account = await AccountModel.findOne({ userId: context.user.id });
-      if (!account) {
-       throw new Error('Account not found');
-      }
+      const { createReadStream, filename } = await file;
+      const buffer = await new Promise<Buffer>((resolve, reject) => {
+        const chunks: Buffer[] = [];
+        const stream = createReadStream();
+        stream.on('data', (chunk) => chunks.push(Buffer.from(chunk)));
+        stream.on('end', () => resolve(Buffer.concat(chunks)));
+        stream.on('error', reject);
+      });
 
-      const defaultAccountId = account._id;
+      const account = await AccountModel.findOne({ userId: context.user.id });
+      if (!account) throw new Error('Account not found');
 
-      const session = await CsvImportModel.create({
+      const session = await ImportModel.create({
         userId: context.user.id,
         filename,
         status: 'processing',
@@ -33,24 +62,17 @@ const csvImportResolvers = {
       });
 
       try {
-        const csvBuffer = Buffer.from(base64, 'base64');
-        const csvText = csvBuffer.toString('utf-8');
-
-        const records = parse(csvText, {
-          columns: true,
-          skip_empty_lines: true,
-          trim: true,
-        });
+        const { records, columnMapping } = await processFileContent(buffer, filename);
 
         const uniqueSet = new Set();
         const transactions = [];
         let skipped = 0;
 
         for (const row of records) {
-          const amount = parseFloat(row['Сумма'] || row['Amount'] || '0');
+          const amount = parseFloat(row[columnMapping.amount] || '0');
           const type = amount >= 0 ? 'income' : 'expense';
-          const description = row['Описание'] || row['Description'] || '';
-          const date = new Date(row['Дата'] || row['Date']);
+          const description = row[columnMapping.description] || '';
+          const date = new Date(row[columnMapping.date]);
 
           const signatureSource = `${context.user.id}_${date.toISOString().slice(0, 10)}_${Math.abs(amount)}_${description.trim().toLowerCase()}`;
           const signature = crypto.createHash('md5').update(signatureSource).digest('hex');
@@ -72,7 +94,7 @@ const csvImportResolvers = {
 
           transactions.push({
             userId: context.user.id,
-            accountId: defaultAccountId,
+            accountId: account._id,
             amount: Math.abs(amount),
             type,
             category,
@@ -96,10 +118,10 @@ const csvImportResolvers = {
       } catch (err) {
         session.status = 'error';
         await session.save();
-        throw new Error('Failed to parse CSV: ' + err);
+        throw new Error('Failed to process file: ' + err);
       }
     },
   },
 };
 
-export default csvImportResolvers;
+export default fileImportResolvers;

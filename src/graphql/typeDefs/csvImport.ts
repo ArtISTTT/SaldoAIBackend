@@ -1,7 +1,10 @@
+
 import { gql } from 'graphql-tag';
 
-const csvImportTypeDefs = gql`
-  type CsvImportSession {
+const fileImportTypeDefs = gql`
+  scalar Upload
+
+  type ImportSession {
     id: ID!
     userId: ID!
     filename: String!
@@ -11,19 +14,19 @@ const csvImportTypeDefs = gql`
     updatedAt: String!
   }
 
-  type CsvImportResult {
-    session: CsvImportSession!
+  type ImportResult {
+    session: ImportSession!
     imported: [Transaction!]!
     skipped: Int!
   }
 
   type Query {
-    csvImportSessions: [CsvImportSession!]!
+    importSessions: [ImportSession!]!
   }
 
   type Mutation {
-    startImport(filename: String!, base64: String!): CsvImportResult!
+    startImport(file: Upload!): ImportResult!
   }
 `;
 
-export default csvImportTypeDefs;
+export default fileImportTypeDefs;
