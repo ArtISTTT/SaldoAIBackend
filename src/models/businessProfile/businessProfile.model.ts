@@ -52,7 +52,7 @@ businessProfileSchema.virtual('taxConfig').get(function() {
   const baseConfig = TAX_LIMITS[this.taxSystem] || TAX_LIMITS[TaxSystem.USN_INCOME];
   const yearly = this.customTaxLimits?.yearly || baseConfig.yearly;
   const monthly = this.customTaxLimits?.monthly || baseConfig.monthly;
-  const rate = this.customTaxRate || baseConfig.rate;
+  const rate = this.customTaxRate === 0 ? 0 : (this.customTaxRate || baseConfig.rate);
   
   return {
     yearly: Number(yearly),

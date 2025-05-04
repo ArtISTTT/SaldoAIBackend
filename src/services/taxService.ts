@@ -30,7 +30,7 @@ export class TaxService {
       .reduce((sum, t) => sum + t.amount, 0);
 
     const baseConfig = TAX_LIMITS[profile.taxSystem];
-    const taxRate = profile.customTaxRate || baseConfig.rate;
+    const taxRate = profile.customTaxRate === 0 ? 0 : (profile.customTaxRate || baseConfig.rate);
     const taxAmount = income * taxRate;
 
     const limits = profile.customTaxLimits || baseConfig;
