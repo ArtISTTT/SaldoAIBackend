@@ -45,7 +45,19 @@ const transactionResolvers = {
         sort.date = -1;
       }
 
-      return TransactionModel.find(query).sort(sort);
+      const limit = args.limit || 20;
+      const skip = ((args.page || 1) - 1) * limit;
+      
+      const [transactions, totalCount] = await Promise.all([
+        TransactionModel.find(query).sort(sort).skip(skip).limit(limit),
+        TransactionModel.countDocuments(query)
+      ]);
+
+      return {
+        transactions,
+        totalCount,
+        hasNextPage: skip + transactions.length < totalCount
+      };
     },
   },
 

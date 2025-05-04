@@ -38,6 +38,12 @@ const transactionTypeDefs = gql`
     updatedAt: String!
   }
 
+  type PaginatedTransactions {
+    transactions: [Transaction!]!
+    totalCount: Int!
+    hasNextPage: Boolean!
+  }
+
   type Query {
     transactions(
       search: String
@@ -45,7 +51,9 @@ const transactionTypeDefs = gql`
       dateFrom: String
       dateTo: String
       sortBy: TransactionSortByInput
-    ): [Transaction!]!
+      page: Int = 1
+      limit: Int = 20
+    ): PaginatedTransactions!
   }
 
   input TransactionInput {
