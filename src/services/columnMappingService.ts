@@ -1,12 +1,12 @@
-
 import { getOpenAI } from '@/utils/openai';
 
-interface ColumnMapping {
-  amount: string;
+export interface ColumnMapping {
+  amountCredit?: string | null;
+  amountDebit?: string | null;
   date: string;
   description: string;
-  category?: string;
-  type?: string;
+  category?: string | null;
+  type?: string | null;
 }
 
 export async function identifyColumns(columns: string[]): Promise<ColumnMapping> {
@@ -18,36 +18,44 @@ export async function identifyColumns(columns: string[]): Promise<ColumnMapping>
       messages: [
         {
           role: "system",
-          content: "Ты - аналитическая система, которая помогает определить соответствие столбцов в файлах транзакций. Нужно идентифицировать, какие столбцы содержат какую информацию."
+          content: `Ты — аналитическая система, которая помогает определить соответствие столбцов в файлах транзакций. 
+Внимание: сумма может быть в одной колонке (с положительными и отрицательными значениями), либо в двух — например "Кредит" и "Дебет", "Приход" и "Расход".
+Нужно определить:
+- колонку amountCredit (если есть) — где отражаются положительные суммы (приход, кредит),
+- колонку amountDebit (если есть) — где отражаются отрицательные суммы (расход, дебет),
+Если есть только одна колонка с суммой (с положительными и отрицательными числами), то amountCredit и amountDebit должны быть равны названию этой одной колонки.
+Остальные поля определить как раньше.`
         },
         {
           role: "user",
           content: `В файле транзакций есть следующие столбцы: ${columns.join(', ')}. 
-          Определи, какой столбец соответствует: 
-          1. Сумме транзакции (amount)
-          2. Дате транзакции (date)
-          3. Описанию транзакции (description)
-          4. Категории транзакции (category), если есть
-          5. Типу транзакции (type), если есть
-          
-          Верни ответ в формате JSON: {
-            "amount": "название столбца",
-            "date": "название столбца",
-            "description": "название столбца",
-            "category": "название столбца или null",
-            "type": "название столбца или null"
+            Определи, какие столбцы соответствуют следующим полям:
+
+            1. amountCredit — сумма поступлений, кредит, приход
+            2. amountDebit — сумма списаний, дебет, расход
+
+            Некоторые названия могут быть сложными — например, "Сумма по дебету", "Сумма по кредиту", "Сумма списания", "Сумма зачисления" и т.п.
+
+            Верни ответ строго в формате JSON:
+            {
+              "amountCredit": "название столбца или null",
+              "amountDebit": "название столбца или null",
+              "date": "название столбца",
+              "description": "название столбца",
+              "category": "название столбца или null",
+              "type": "название столбца или null"
           }`
         }
       ],
       response_format: { type: "json_object" },
       temperature: 0.1,
     });
-    
+
     const content = response.choices[0]?.message?.content;
     if (!content) {
       throw new Error("Не удалось получить ответ от OpenAI");
     }
-    
+
     return JSON.parse(content) as ColumnMapping;
   } catch (error) {
     console.error("Ошибка при идентификации столбцов:", error);

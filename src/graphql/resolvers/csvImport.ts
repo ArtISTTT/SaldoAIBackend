@@ -9,14 +9,19 @@ import { categorizeTransaction } from '@/utils/categorize';
 import { identifyColumns } from '@/services/columnMappingService';
 import dayjs from 'dayjs';
 import { FileUpload } from 'graphql-upload/processRequest.mjs';
+import { computeAmount } from '@/services/computeAmount';
 
 const processFileContent = async (buffer: Buffer, filename: string) => {
   let records = [];
+  let headers = [];
   
-  if (filename.toLowerCase().endsWith('.xlsx')) {
+  if (filename.toLowerCase().endsWith('.xlsx') || filename.toLowerCase().endsWith('.xls')) {
     const workbook = readXLSX(buffer, { cellDates: true });
     const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
     records = xlsxUtils.sheet_to_json(firstSheet);
+    headers = Array.from(
+      new Set(records.flatMap((record: any) => Object.keys(record)))
+    );
   } else {
     const csvText = buffer.toString('utf-8');
     records = parse(csvText, {
@@ -24,9 +29,10 @@ const processFileContent = async (buffer: Buffer, filename: string) => {
       skip_empty_lines: true,
       trim: true,
     });
+    headers = Object.keys(records[0] || {});
   }
 
-  const headers = Object.keys(records[0] || {});
+  console.log('Parsed records:', records);
   const columnMapping = await identifyColumns(headers);
   
   return { records, columnMapping };
@@ -73,7 +79,7 @@ const fileImportResolvers = {
         let skipped = 0;
 
         for (const row of records) {
-          const amount = parseFloat(row[columnMapping.amount] || '0');
+          const amount = computeAmount(row, columnMapping);
           const type = amount >= 0 ? 'income' : 'expense';
           const description = row[columnMapping.description] || '';
           const date = dayjs(row[columnMapping.date]);
