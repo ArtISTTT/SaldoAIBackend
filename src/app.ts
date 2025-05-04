@@ -9,6 +9,7 @@ import { expressMiddleware } from '@apollo/server/express4';
 import { typeDefs, resolvers } from './graphql/schema';
 import { buildContext } from './middlewares/auth';
 import { Context } from './types';
+import graphqlUploadExpress from 'graphql-upload/graphqlUploadExpress.mjs';
 
 dotenv.config();
 export const startServer = async () => {
@@ -16,6 +17,7 @@ export const startServer = async () => {
 
   app.use(cors());
   app.use(json());
+  app.use(graphqlUploadExpress());
 
   const server = new ApolloServer<Context>({
     typeDefs,

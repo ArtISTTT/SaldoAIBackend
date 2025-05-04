@@ -7,12 +7,14 @@ import { read as readXLSX, utils as xlsxUtils } from 'xlsx';
 import crypto from 'crypto';
 import { categorizeTransaction } from '@/utils/categorize';
 import { identifyColumns } from '@/services/columnMappingService';
+import dayjs from 'dayjs';
+import { FileUpload } from 'graphql-upload/processRequest.mjs';
 
 const processFileContent = async (buffer: Buffer, filename: string) => {
   let records = [];
   
   if (filename.toLowerCase().endsWith('.xlsx')) {
-    const workbook = readXLSX(buffer);
+    const workbook = readXLSX(buffer, { cellDates: true });
     const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
     records = xlsxUtils.sheet_to_json(firstSheet);
   } else {
@@ -39,10 +41,12 @@ const fileImportResolvers = {
   },
 
   Mutation: {
-    startImport: async (_: any, { file }: any, context: any) => {
+    startImport: async (_: any, { file: upload }: any, context: any) => {
       if (!context.user) throw new Error('Unauthorized');
 
-      const { createReadStream, filename } = await file;
+      const file: FileUpload = (await upload).file;
+
+      const { createReadStream, filename } = file;
       const buffer = await new Promise<Buffer>((resolve, reject) => {
         const chunks: Buffer[] = [];
         const stream = createReadStream();
@@ -72,7 +76,7 @@ const fileImportResolvers = {
           const amount = parseFloat(row[columnMapping.amount] || '0');
           const type = amount >= 0 ? 'income' : 'expense';
           const description = row[columnMapping.description] || '';
-          const date = new Date(row[columnMapping.date]);
+          const date = dayjs(row[columnMapping.date]);
 
           const signatureSource = `${context.user.id}_${date.toISOString().slice(0, 10)}_${Math.abs(amount)}_${description.trim().toLowerCase()}`;
           const signature = crypto.createHash('md5').update(signatureSource).digest('hex');
