@@ -14,14 +14,25 @@ export interface ITransaction extends Document {
   signature: string;
 }
 
+import { encrypt, decrypt } from '@/utils/encryption';
+
 const transactionSchema = new Schema<ITransaction>(
   {
     userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     accountId: { type: Schema.Types.ObjectId, ref: 'Account', required: true },
-    amount: { type: Number, required: true },
+    amount: { 
+      type: String, 
+      required: true,
+      set: (value: number) => encrypt(value.toString()),
+      get: (value: string) => Number(decrypt(value))
+    },
     type: { type: String, enum: ['income', 'expense'], required: true },
     category: { type: String, enum: Object.values(TransactionCategory), required: true },
-    description: { type: String },
+    description: { 
+      type: String,
+      set: (value: string) => value ? encrypt(value) : value,
+      get: (value: string) => value ? decrypt(value) : value
+    },
     date: { type: Date, required: true },
     signature: {
       type: String,
@@ -29,7 +40,7 @@ const transactionSchema = new Schema<ITransaction>(
       index: true,
     },
   },
-  { timestamps: true },
+  { timestamps: true, toJSON: { getters: true }, toObject: { getters: true } },
 );
 
 export const TransactionModel = model<ITransaction>('Transaction', transactionSchema);
