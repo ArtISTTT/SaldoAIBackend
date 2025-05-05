@@ -21,6 +21,9 @@ import analyticsResolvers from '../resolvers/analytics';
 import commonTypeDefs from '../typeDefs/common';
 import businessProfileResolvers from '../resolvers/businessProfile';
 import businessProfileTypeDefs from '../typeDefs/businessProfile';
+import reviewTypeDefs from '../typeDefs/review'; // Added
+import reviewResolvers from '../resolvers/review'; // Added
+
 
 export const typeDefs = mergeTypeDefs([
   userTypeDefs,
@@ -33,6 +36,7 @@ export const typeDefs = mergeTypeDefs([
   analyticsTypeDefs,
   commonTypeDefs,
   businessProfileTypeDefs,
+  reviewTypeDefs, // Added
 ]);
 
 export const resolvers = mergeResolvers([
@@ -45,6 +49,7 @@ export const resolvers = mergeResolvers([
   csvImportResolvers,
   analyticsResolvers,
   businessProfileResolvers,
+  reviewResolvers, // Added
 ]);
 
 export const schema = makeExecutableSchema({
