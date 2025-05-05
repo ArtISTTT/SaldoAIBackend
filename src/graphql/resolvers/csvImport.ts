@@ -50,6 +50,12 @@ const fileImportResolvers = {
     startImport: async (_: any, { file: upload }: any, context: any) => {
       if (!context.user) throw new Error('Unauthorized');
 
+      const { TransactionLimitService } = await import('@/services/transactionLimitService');
+      const canAdd = await TransactionLimitService.checkAndIncrementTransactionCount(context.user.id);
+      if (!canAdd) {
+        throw new Error('Transaction limit exceeded for your subscription plan');
+      }
+
       const file: FileUpload = (await upload).file;
 
       const { createReadStream, filename } = file;
