@@ -10,6 +10,7 @@ import { identifyColumns } from '@/services/columnMappingService';
 import dayjs from 'dayjs';
 import { FileUpload } from 'graphql-upload/processRequest.mjs';
 import { computeAmount } from '@/services/computeAmount';
+import { TransactionLimitService } from '@/services/transactionLimitService';
 
 const processFileContent = async (buffer: Buffer, filename: string) => {
   let records = [];
@@ -50,12 +51,6 @@ const fileImportResolvers = {
     startImport: async (_: any, { file: upload }: any, context: any) => {
       if (!context.user) throw new Error('Unauthorized');
 
-      const { TransactionLimitService } = await import('@/services/transactionLimitService');
-      const canAdd = await TransactionLimitService.checkAndIncrementTransactionCount(context.user.id);
-      if (!canAdd) {
-        throw new Error('Transaction limit exceeded for your subscription plan');
-      }
-
       const file: FileUpload = (await upload).file;
 
       const { createReadStream, filename } = file;
@@ -79,6 +74,11 @@ const fileImportResolvers = {
 
       try {
         const { records, columnMapping } = await processFileContent(buffer, filename);
+
+        const canAdd = await TransactionLimitService.checkAndIncrementTransactionCount(context.user.id, records?.length ?? 1);
+        if (!canAdd) {
+          throw new Error('Transaction limit exceeded for your subscription plan');
+        }
 
         const uniqueSet = new Set();
         const transactions = [];

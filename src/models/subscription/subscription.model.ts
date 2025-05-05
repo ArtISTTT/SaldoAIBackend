@@ -19,12 +19,6 @@ const subscriptionSchema = new Schema<ISubscription>(
     endDate: { type: Date, required: true },
     active: { type: Boolean, default: true },
     transactionCount: { type: Number, default: 0 },
-  {
-    userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-    planId: { type: Schema.Types.ObjectId, ref: 'SubscriptionPlan', required: true },
-    startDate: { type: Date, required: true },
-    endDate: { type: Date, required: true },
-    active: { type: Boolean, default: true },
   },
   { timestamps: true },
 );

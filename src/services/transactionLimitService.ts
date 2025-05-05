@@ -17,11 +17,10 @@ export class TransactionLimitService {
     }
   }
 
-  static async checkAndIncrementTransactionCount(userId: Types.ObjectId): Promise<boolean> {
+  static async checkAndIncrementTransactionCount(userId: Types.ObjectId, count: number = 1): Promise<boolean> {
     const subscription = await SubscriptionModel.findOne({ 
       userId,
       active: true,
-      endDate: { $gt: new Date() }
     }).populate('planId');
 
     if (!subscription) {
@@ -31,13 +30,13 @@ export class TransactionLimitService {
     const plan = subscription.planId as any;
     const limit = this.getMonthlyLimit(plan.name);
     
-    if (subscription.transactionCount >= limit) {
+    if ((subscription.transactionCount + count) >= limit) {
       return false;
     }
 
     await SubscriptionModel.updateOne(
       { _id: subscription._id },
-      { $inc: { transactionCount: 1 } }
+      { $inc: { transactionCount: count } }
     );
 
     return true;

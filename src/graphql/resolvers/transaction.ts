@@ -1,7 +1,6 @@
 import { TransactionModel } from '@/models/transaction/transaction.model';
 import { categorizeTransaction } from '@/utils/categorize';
 import crypto from 'crypto';
-
 import { TransactionLimitService } from '@/services/transactionLimitService';
 
 const transactionResolvers = {
@@ -18,6 +17,8 @@ const transactionResolvers = {
         dateFrom?: string;
         dateTo?: string;
         sortBy?: { field: 'date' | 'amount'; order: 'ASC' | 'DESC' };
+        page?: number;
+        limit?: number;
       },
       context: { user?: { id: string } }
     ) => {
