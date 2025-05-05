@@ -2,8 +2,14 @@ import { TransactionModel } from '@/models/transaction/transaction.model';
 import { categorizeTransaction } from '@/utils/categorize';
 import crypto from 'crypto';
 
+import { TransactionLimitService } from '@/services/transactionLimitService';
+
 const transactionResolvers = {
   Query: {
+    transactionUsage: async (_: unknown, __: unknown, context: { user?: { id: string } }) => {
+      if (!context.user) throw new Error('Unauthorized');
+      return TransactionLimitService.getTransactionUsage(context.user.id);
+    },
     transactions: async (
       _: unknown,
       args: {
@@ -64,6 +70,11 @@ const transactionResolvers = {
   Mutation: {
     addTransaction: async (_: any, { input }: any, context: any) => {
       if (!context.user) throw new Error('Unauthorized');
+      
+      const canAdd = await TransactionLimitService.checkAndIncrementTransactionCount(context.user.id);
+      if (!canAdd) {
+        throw new Error('Transaction limit exceeded for your subscription plan');
+      }
 
       const signatureSource = `${context.user.id}_${Math.abs(input.amount)}_${input.description.trim().toLowerCase()}`;
       const signature = crypto.createHash('md5').update(signatureSource).digest('hex');

@@ -44,7 +44,14 @@ const transactionTypeDefs = gql`
     hasNextPage: Boolean!
   }
 
+  type TransactionUsage {
+    used: Int!
+    limit: Int!
+    remaining: Int!
+  }
+
   type Query {
+    transactionUsage: TransactionUsage!
     transactions(
       search: String
       category: TransactionCategory
