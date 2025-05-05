@@ -33,7 +33,6 @@ const processFileContent = async (buffer: Buffer, filename: string) => {
     headers = Object.keys(records[0] || {});
   }
 
-  console.log('Parsed records:', records);
   const columnMapping = await identifyColumns(headers);
   
   return { records, columnMapping };
