@@ -1,5 +1,5 @@
-import { TransactionCategory } from '@/constants';
-import { Schema, model, Document, Types } from 'mongoose';
+import { TransactionCategory } from '../../constants';
+import { Schema, model, Document, Types, SchemaDefinitionProperty } from 'mongoose';
 
 export interface ITransaction extends Document {
   userId: Types.ObjectId;
@@ -14,18 +14,18 @@ export interface ITransaction extends Document {
   signature: string;
 }
 
-import { encrypt, decrypt } from '@/utils/encryption';
+import { encrypt, decrypt } from '../../utils/encryption';
 
 const transactionSchema = new Schema<ITransaction>(
   {
     userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     accountId: { type: Schema.Types.ObjectId, ref: 'Account', required: true },
     amount: { 
-      type: String, 
+      type: Schema.Types.Mixed, 
       required: true,
       set: (value: number) => encrypt(value.toString()),
       get: (value: string) => Number(decrypt(value))
-    },
+    } as unknown as SchemaDefinitionProperty<number>,
     type: { type: String, enum: ['income', 'expense'], required: true },
     category: { type: String, enum: Object.values(TransactionCategory), required: true },
     description: { 
