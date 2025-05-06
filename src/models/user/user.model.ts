@@ -7,6 +7,10 @@ export interface IUser extends Document {
   role: 'user' | 'admin';
   createdAt: Date;
   updatedAt: Date;
+  isEmailConfirmed: boolean;
+  emailConfirmToken?: string;
+  passwordResetToken?: string;
+  passwordResetExpires?: Date;
 }
 
 const userSchema = new Schema<IUser>(
@@ -15,6 +19,10 @@ const userSchema = new Schema<IUser>(
     passwordHash: { type: String, required: true },
     name: { type: String },
     role: { type: String, enum: ['user', 'admin'], default: 'user' },
+    isEmailConfirmed: { type: Boolean, default: false },
+    emailConfirmToken: { type: String },
+    passwordResetToken: { type: String },
+    passwordResetExpires: { type: Date },
   },
   { timestamps: true },
 );
