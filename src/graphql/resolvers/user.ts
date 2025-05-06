@@ -76,13 +76,59 @@ const userResolvers = {
       return token;
     },
     forgotPassword: async (_parent: any, { email }: { email: string }) => {
-      return 'Password reset email sent';
+      const user = await UserModel.findOne({ email });
+      if (!user) {
+        throw new Error('User not found');
+      }
+
+      const resetToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET!, { expiresIn: '1h' });
+      user.passwordResetToken = resetToken;
+      user.passwordResetExpires = new Date(Date.now() + 3600000); // 1 hour
+      await user.save();
+
+      await EmailService.sendPasswordResetEmail(email, resetToken);
+      return true;
     },
-    resetPassword: async (_parent: any, { token, password }: { token: string; password: string }) => {
-      return 'Password reset successfully';
+
+    resetPassword: async (_parent: any, { token, newPassword }: { token: string; newPassword: string }) => {
+      const user = await UserModel.findOne({
+        passwordResetToken: token,
+        passwordResetExpires: { $gt: Date.now() }
+      });
+
+      if (!user) {
+        throw new Error('Invalid or expired reset token');
+      }
+
+      const passwordHash = await bcrypt.hash(newPassword, 10);
+      user.passwordHash = passwordHash;
+      user.passwordResetToken = undefined;
+      user.passwordResetExpires = undefined;
+      await user.save();
+
+      return true;
     },
+
     confirmEmail: async (_parent: any, { token }: { token: string }) => {
-      return 'Email confirmed successfully';
+      try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { id: string };
+        const user = await UserModel.findOne({ 
+          _id: decoded.id,
+          emailConfirmToken: token
+        });
+
+        if (!user) {
+          throw new Error('Invalid confirmation token');
+        }
+
+        user.isEmailConfirmed = true;
+        user.emailConfirmToken = undefined;
+        await user.save();
+
+        return true;
+      } catch (error) {
+        throw new Error('Invalid or expired confirmation token');
+      }
     }
   },
 };
