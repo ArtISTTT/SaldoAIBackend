@@ -2,6 +2,7 @@ import { UserModel } from '@/models/user/user.model';
 import { AccountModel } from '@/models/account/account.model';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { EmailService } from '@/services/emailService';
 
 
 const userResolvers = {
@@ -40,6 +41,8 @@ const userResolvers = {
       const confirmToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET!, { expiresIn: '24h' });
       user.emailConfirmToken = confirmToken;
       await user.save();
+
+      EmailService.sendConfirmationEmail(email, confirmToken);
 
       // Create default account
       const account = await AccountModel.create({
