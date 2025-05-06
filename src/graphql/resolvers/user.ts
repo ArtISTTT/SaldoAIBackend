@@ -2,6 +2,8 @@ import { UserModel } from '@/models/user/user.model';
 import { AccountModel } from '@/models/account/account.model';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { sendEmail } from '@/utils/sendEmail'; // Assumed function for sending emails
+
 
 const userResolvers = {
   Query: {
@@ -37,8 +39,8 @@ const userResolvers = {
       const user = new UserModel({ email, name, passwordHash, role: 'user' });
       await user.save();
 
-      // Создание дефолтного аккаунта для нового пользователя
-      await AccountModel.create({
+      // Create default account
+      const account = await AccountModel.create({
         userId: user._id,
         name: 'Default Account',
         type: 'other',
@@ -69,6 +71,40 @@ const userResolvers = {
 
       return token;
     },
+    forgotPassword: async (_parent: any, { email }: { email: string }) => {
+      const user = await UserModel.findOne({ email });
+      if (!user) {
+        throw new Error('User not found');
+      }
+      // Generate reset token and send email (Implementation needed)
+      const resetToken = await user.generatePasswordResetToken();
+      await user.save();
+      await sendEmail(email, `Reset password: ${resetToken}`);
+      return 'Password reset email sent';
+    },
+    resetPassword: async (_parent: any, { token, password }: { token: string; password: string }) => {
+      const user = await UserModel.findOne({ passwordResetToken: token, passwordResetExpires: { $gt: Date.now() } });
+      if (!user) {
+        throw new Error('Invalid or expired token');
+      }
+      user.passwordHash = await bcrypt.hash(password, 10);
+      user.passwordResetToken = undefined;
+      user.passwordResetExpires = undefined;
+      await user.save();
+      return 'Password reset successfully';
+    },
+    confirmEmail: async (_parent: any, { token }: { token: string }) => {
+      //Implementation needed to verify email confirmation token
+      const user = await UserModel.findOne({ emailConfirmationToken: token, emailConfirmationExpires: { $gt: Date.now() } });
+      if (!user) {
+        throw new Error('Invalid or expired token');
+      }
+      user.emailConfirmed = true;
+      user.emailConfirmationToken = undefined;
+      user.emailConfirmationExpires = undefined;
+      await user.save();
+      return 'Email confirmed successfully';
+    }
   },
 };
 
