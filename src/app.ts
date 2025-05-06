@@ -21,7 +21,7 @@ export const startServer = async () => {
 
   const server = new ApolloServer<Context>({
     typeDefs,
-    resolvers,
+    resolvers: resolvers as any,
   });
 
   await server.start();

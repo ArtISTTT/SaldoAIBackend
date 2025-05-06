@@ -7,7 +7,7 @@
     "resolveJsonModule": true,
     "outDir": "./dist",
     "rootDir": "./src",
-    "baseUrl": "./",          // базовая папка для alias'ов
+    "baseUrl": "./",
     "paths": {
       "@/*": ["src/*"],
     },

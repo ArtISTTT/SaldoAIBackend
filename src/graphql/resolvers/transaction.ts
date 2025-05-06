@@ -2,10 +2,11 @@ import { TransactionModel } from '@/models/transaction/transaction.model';
 import { categorizeTransaction } from '@/utils/categorize';
 import crypto from 'crypto';
 import { TransactionLimitService } from '@/services/transactionLimitService';
+import { Types } from 'mongoose';
 
 const transactionResolvers = {
   Query: {
-    transactionUsage: async (_: unknown, __: unknown, context: { user?: { id: string } }) => {
+    transactionUsage: async (_: unknown, __: unknown, context: { user?: { id: Types.ObjectId } }) => {
       if (!context.user) throw new Error('Unauthorized');
       return TransactionLimitService.getTransactionUsage(context.user.id);
     },
