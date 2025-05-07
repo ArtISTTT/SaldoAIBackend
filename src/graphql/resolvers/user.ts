@@ -64,12 +64,16 @@ const userResolvers = {
     ) => {
       const user = await UserModel.findOne({ email });
       if (!user) {
-        throw new Error('User not found');
+        throw new Error('Пользователь не найден');
       }
 
       const valid = await bcrypt.compare(password, user.passwordHash);
       if (!valid) {
-        throw new Error('Incorrect password');
+        throw new Error('Неверный пароль');
+      }
+
+      if (!user.isEmailConfirmed) {
+        throw new Error('Email не подтвержден');
       }
 
       const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET!, {
